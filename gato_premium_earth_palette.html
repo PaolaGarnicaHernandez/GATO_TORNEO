@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gato Cyber - Earth & Stone Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        moodyBeige: '#C4BEB3',
+                        pewterMoon: '#5B6A70',
+                        pewterMoonDark: '#2C3538',
+                        pewterMoonDeep: '#161B1C',
+                        driedGrass: '#C2B896',
+                        summerSun: '#FAEAD4',
+                        councilBluffs: '#CD8D54',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at center, #2C3538 0%, #161B1C 100%);
+            overflow-x: hidden;
+        }
+        .font-header {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        /* Earth glassmorphic card with Moody Beige borders */
+        .glass-card {
+            background: rgba(44, 53, 56, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(196, 190, 179, 0.25);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
+        }
+        /* Custom shadows with Earth palette from image_391a19.png */
+        .neon-shadow-x {
+            box-shadow: 0 0 25px rgba(205, 141, 84, 0.35);
+        }
+        .neon-shadow-o {
+            box-shadow: 0 0 25px rgba(194, 184, 150, 0.35);
+        }
+        /* Subtle Glow text effects */
+        .text-glow-x {
+            text-shadow: 0 0 10px rgba(205, 141, 84, 0.6);
+        }
+        .text-glow-o {
+            text-shadow: 0 0 10px rgba(194, 184, 150, 0.6);
+        }
+        /* Grid transitions and interactive hover responses */
+        .cell-hover:hover {
+            background: rgba(250, 234, 212, 0.05);
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="h-full text-summerSun flex flex-col justify-between min-h-screen">
+
+    <!-- Confetti canvas overlay -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <header class="w-full max-w-5xl mx-auto px-4 py-4 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-councilBluffs to-driedGrass flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-gamepad text-pewterMoonDeep text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-header font-bold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-summerSun via-moodyBeige to-councilBluffs">GATO EARTH</h1>
+                <p class="text-xs text-moodyBeige/85 font-medium">Stone & Wood Edition</p>
+            </div>
+        </div>
+        <!-- Status indicator / Sound controller -->
+        <div class="flex items-center gap-3">
+            <button id="toggle-sound-btn" class="p-2 rounded-lg bg-pewterMoonDark/80 hover:bg-pewterMoon border border-moodyBeige/30 transition text-summerSun" title="Activar/Silenciar sonido">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+            <span id="connection-status" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-pewterMoonDark/80 border border-moodyBeige/20 text-xs text-driedGrass font-semibold shadow-inner">
+                <span class="w-2 h-2 rounded-full bg-driedGrass animate-pulse"></span> Local activo
+            </span>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-md mx-auto px-4 flex flex-col justify-center py-6 z-10">
+
+        <!-- SCREEN 1: Setup & Game Modes -->
+        <div id="setup-screen" class="glass-card rounded-2xl p-6 md:p-8 w-full transition-all duration-300 transform scale-100 flex flex-col gap-6">
+            <div class="text-center">
+                <h2 class="text-2xl font-bold font-header text-summerSun mb-2">Comenzar Partida</h2>
+                <p class="text-moodyBeige text-sm">Escoge tu modo de juego y registra tus alias.</p>
+            </div>
+
+            <!-- Mode tabs using color palette from image_391a19.png -->
+            <div class="grid grid-cols-2 p-1 bg-pewterMoonDeep/90 rounded-xl border border-pewterMoon/30">
+                <button id="tab-local-btn" class="py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-councilBluffs to-pewterMoon text-summerSun shadow-md">
+                    <i class="fa-solid fa-couch mr-2"></i>Local (1v1)
+                </button>
+                <button id="tab-online-btn" class="py-2.5 px-4 rounded-lg font-semibold text-sm text-moodyBeige hover:text-summerSun transition-all duration-200">
+                    <i class="fa-solid fa-globe mr-2"></i>Online 
+                </button>
+            </div>
+
+            <!-- Form Local Play -->
+            <div id="local-setup-fields" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-councilBluffs mb-2">Jugador 1 (Tache - X)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-councilBluffs">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </span>
+                        <input id="input-p1-local" type="text" value="Jugador 1" placeholder="Nombre de Jugador 1" 
+                            class="w-full bg-pewterMoonDeep/50 border border-pewterMoon/40 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-councilBluffs text-summerSun placeholder-moodyBeige/50 transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-driedGrass mb-2">Jugador 2 (Círculo - O)</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-driedGrass">
+                            <i class="fa-regular fa-circle text-lg"></i>
+                        </span>
+                        <input id="input-p2-local" type="text" value="Jugador 2" placeholder="Nombre de Jugador 2" 
+                            class="w-full bg-pewterMoonDeep/50 border border-pewterMoon/40 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-driedGrass text-summerSun placeholder-moodyBeige/50 transition">
+                    </div>
+                </div>
+                <button id="start-local-btn" class="w-full bg-gradient-to-r from-councilBluffs via-moodyBeige to-driedGrass hover:opacity-95 text-pewterMoonDeep font-bold py-3.5 px-6 rounded-xl transition duration-200 shadow-lg transform hover:-translate-y-0.5 mt-2 font-header tracking-wide text-sm uppercase">
+                    ¡Iniciar Duelo Local!
+                </button>
+            </div>
+
+            <!-- Form Online Play -->
+            <div id="online-setup-fields" class="hidden flex flex-col gap-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-councilBluffs mb-2">Tu Alias</label>
+                    <input id="input-online-nick" type="text" value="Piloto" placeholder="Ingresa tu apodo" 
+                        class="w-full bg-pewterMoonDeep/50 border border-pewterMoon/40 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-councilBluffs text-summerSun transition">
+                </div>
+
+                <div class="h-px bg-pewterMoon/30 my-1"></div>
+
+                <div class="flex flex-col gap-3">
+                    <button id="create-room-btn" class="w-full bg-councilBluffs/20 hover:bg-councilBluffs/30 text-summerSun border border-councilBluffs/40 font-semibold py-3 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i> Crear una Nueva Sala
+                    </button>
+                    
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-pewterMoon/30"></div>
+                        <span class="flex-shrink mx-4 text-moodyBeige text-xs uppercase tracking-wider font-semibold">o únete a una</span>
+                        <div class="flex-grow border-t border-pewterMoon/30"></div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input id="input-room-code" type="text" placeholder="Código" 
+                            class="flex-1 bg-pewterMoonDeep/50 border border-pewterMoon/40 rounded-xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-councilBluffs text-center font-mono font-bold tracking-wider text-summerSun transition">
+                        <button id="join-room-btn" class="bg-councilBluffs hover:bg-councilBluffs/90 text-pewterMoonDeep font-bold px-6 rounded-xl transition text-sm flex items-center justify-center">
+                            Unirse
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="lobby-screen" class="hidden glass-card rounded-2xl p-6 md:p-8 w-full transition-all duration-300 flex flex-col gap-6 text-center">
+            <div>
+                <h2 class="text-xl font-bold font-header text-summerSun mb-1">Sala de Espera</h2>
+                <p class="text-moodyBeige text-sm">Comparte el código con tu oponente para conectar.</p>
+            </div>
+
+            <div class="bg-pewterMoonDeep/90 border border-pewterMoon/30 rounded-2xl p-4 flex flex-col gap-2 items-center justify-center">
+                <span class="text-xs text-moodyBeige uppercase tracking-widest font-semibold">Código de la Sala</span>
+                <div class="flex items-center gap-3">
+                    <span id="lobby-code-display" class="font-mono text-3xl font-extrabold text-councilBluffs tracking-widest text-glow-x">------</span>
+                    <button id="copy-lobby-code-btn" class="p-2 text-moodyBeige hover:text-summerSun bg-pewterMoonDark/50 rounded-lg hover:bg-pewterMoon transition" title="Copiar código">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4 text-left">
+                <div class="flex items-center justify-between p-3.5 bg-pewterMoonDeep/50 rounded-xl border border-pewterMoon/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-councilBluffs/20 text-councilBluffs flex items-center justify-center font-bold">X</div>
+                        <span id="lobby-player-x" class="text-sm font-semibold text-summerSun">Esperando jugador...</span>
+                    </div>
+                    <span id="lobby-status-x" class="text-xs px-2.5 py-1 rounded-full bg-councilBluffs/20 text-summerSun border border-councilBluffs/30">Creador</span>
+                </div>
+
+                <div class="flex items-center justify-between p-3.5 bg-pewterMoonDeep/50 rounded-xl border border-pewterMoon/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-driedGrass/20 text-driedGrass flex items-center justify-center font-bold">O</div>
+                        <span id="lobby-player-o" class="text-sm font-semibold text-moodyBeige animate-pulse">Esperando conexión...</span>
+                    </div>
+                    <span id="lobby-status-o" class="text-xs px-2.5 py-1 rounded-full bg-moodyBeige/20 text-moodyBeige border border-moodyBeige/30 flex items-center gap-1">
+                        <i class="fa-solid fa-circle-notch animate-spin text-[10px]"></i> Pendiente
+                    </span>
+                </div>
+            </div>
+
+            <button id="cancel-lobby-btn" class="text-xs text-councilBluffs hover:text-councilBluffs/80 underline underline-offset-4 transition">
+                Salir de la sala
+            </button>
+        </div>
+
+        <div id="game-screen" class="hidden flex flex-col gap-6 w-full transform transition-all duration-300">
+            
+            <!-- Game Info & Turn Header -->
+            <div class="grid grid-cols-3 items-center glass-card rounded-2xl p-4 gap-2">
+                <!-- Player X Status (Council Bluffs) -->
+                <div id="hud-player-x-card" class="flex flex-col items-center p-2 rounded-xl transition-all duration-300 bg-pewterMoonDeep/40 border border-councilBluffs/40 neon-shadow-x">
+                    <span class="text-xs text-councilBluffs font-bold tracking-wider flex items-center gap-1.5 uppercase">
+                        <i class="fa-solid fa-xmark"></i> X
+                    </span>
+                    <span id="hud-player-x-name" class="text-sm font-bold text-summerSun truncate w-24 text-center mt-1">Jugador 1</span>
+                    <span id="hud-player-x-score" class="text-2xl font-black font-header text-summerSun mt-1">0</span>
+                </div>
+
+                <!-- Mid Indicator (VS / Turn status) -->
+                <div class="flex flex-col items-center justify-center">
+                    <span id="hud-turn-badge" class="text-xs uppercase font-extrabold tracking-widest px-3 py-1.5 rounded-full bg-pewterMoon/30 text-summerSun border border-moodyBeige/20 animate-pulse text-center">
+                        Turno X
+                    </span>
+                    <span id="game-mode-tag" class="text-[10px] text-moodyBeige uppercase tracking-widest mt-2 font-bold">Local</span>
+                </div>
+
+                <!-- Player O Status (Dried Grass) -->
+                <div id="hud-player-o-card" class="flex flex-col items-center p-2 rounded-xl transition-all duration-300 border border-transparent">
+                    <span class="text-xs text-driedGrass font-bold tracking-wider flex items-center gap-1.5 uppercase">
+                        <i class="fa-regular fa-circle text-[10px]"></i> O
+                    </span>
+                    <span id="hud-player-o-name" class="text-sm font-bold text-moodyBeige truncate w-24 text-center mt-1">Jugador 2</span>
+                    <span id="hud-player-o-score" class="text-2xl font-black font-header text-moodyBeige mt-1">0</span>
+                </div>
+            </div>
+
+            <!-- The Grid Container -->
+            <div class="glass-card rounded-3xl p-4 md:p-6 shadow-2xl relative">
+                <!-- Glowing accents behind grid using image's primary highlights -->
+                <div class="absolute inset-0 bg-gradient-to-tr from-councilBluffs/10 to-driedGrass/10 rounded-3xl pointer-events-none"></div>
+                
+                <!-- Gato Grid (3x3) -->
+                <div id="board-grid" class="grid grid-cols-3 gap-3 md:gap-4 aspect-square">
+                    <!-- Dynamic Cells loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Match Actions & Reset -->
+            <div class="flex items-center gap-3">
+                <button id="leave-game-btn" class="flex-1 bg-pewterMoonDeep/60 hover:bg-pewterMoon border border-pewterMoon/30 hover:border-moodyBeige text-moodyBeige font-bold py-3.5 px-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket"></i> Salir
+                </button>
+                <button id="reset-game-btn" class="flex-1 bg-gradient-to-r from-councilBluffs to-pewterMoon text-summerSun hover:opacity-90 font-bold py-3.5 px-4 rounded-xl transition text-sm shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Reiniciar
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Custom Dialog Modal (Replaces unsafe window.alert) -->
+    <div id="custom-alert" class="hidden fixed inset-0 bg-pewterMoonDeep/85 backdrop-blur-md z-50 flex items-center justify-center p-4 transition-all duration-300 opacity-0">
+        <div class="glass-card max-w-sm w-full rounded-2xl p-6 border border-moodyBeige/30 shadow-2xl flex flex-col items-center text-center gap-4 transform scale-90 transition-all duration-300">
+            <div id="alert-icon-container" class="w-14 h-14 rounded-full bg-pewterMoonDark flex items-center justify-center text-2xl">
+                <!-- Dynamic Icon -->
+            </div>
+            <div>
+                <h3 id="alert-title" class="text-xl font-extrabold font-header text-summerSun">¡Aviso!</h3>
+                <p id="alert-message" class="text-moodyBeige text-sm mt-1.5 leading-relaxed">Mensaje del sistema.</p>
+            </div>
+            <button id="alert-confirm-btn" class="w-full bg-pewterMoonDark hover:bg-pewterMoon border border-moodyBeige/25 text-summerSun font-bold py-3 px-6 rounded-xl transition text-sm">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <!-- Interactive Game Win Popup Overlay (non-blocking) -->
+    <div id="win-overlay" class="hidden fixed inset-0 bg-pewterMoonDeep/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center p-4 transition-all duration-300 opacity-0">
+        <div class="glass-card max-w-sm w-full rounded-2xl p-6 md:p-8 border border-moodyBeige/30 shadow-2xl flex flex-col items-center text-center gap-5 transform scale-90 transition-all duration-300">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-councilBluffs to-driedGrass flex items-center justify-center text-pewterMoonDeep text-3xl shadow-lg relative animate-bounce">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-councilBluffs">¡TENEMOS UN GANADOR!</span>
+                <h2 id="win-display-title" class="text-2xl font-black font-header text-summerSun mt-1">¡Victoria!</h2>
+                <p id="win-display-subtitle" class="text-moodyBeige text-sm mt-1">Nombre del jugador ha conquistado la partida.</p>
+            </div>
+            <div class="w-full h-px bg-pewterMoon/30 my-1"></div>
+            <div class="flex flex-col gap-2.5 w-full">
+                <button id="win-overlay-rematch-btn" class="w-full bg-gradient-to-r from-councilBluffs to-driedGrass hover:opacity-95 text-pewterMoonDeep font-bold py-3.5 px-6 rounded-xl transition shadow-lg text-sm uppercase tracking-wider font-header">
+                    ¡Revancha Ahora!
+                </button>
+                <button id="win-overlay-dismiss-btn" class="w-full bg-pewterMoonDark hover:bg-pewterMoon border border-moodyBeige/20 text-moodyBeige font-semibold py-2.5 px-6 rounded-xl transition text-xs">
+                    Ver Tablero
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-5xl mx-auto px-4 py-4 text-center text-xs text-moodyBeige/50 z-10">
+        Diseñado con elegancia • Cyber Gato Earth Palette 2026
+    </footer>
+
+    <!-- Firebase Libraries SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables retrieved from context or defaults
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'gato-cyber-edition';
+        const rawFirebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+        
+        let db = null;
+        let auth = null;
+        let user = null;
+        let roomUnsubscribe = null;
+
+        // Fallback default config if not provided by wrapper
+        const defaultFirebaseConfig = {
+            apiKey: "mock-api-key",
+            authDomain: "mock-auth-domain",
+            projectId: "mock-project-id",
+            storageBucket: "mock-storage-bucket",
+            messagingSenderId: "mock-sender-id",
+            appId: "mock-app-id"
+        };
+        const firebaseConfig = rawFirebaseConfig ? JSON.parse(rawFirebaseConfig) : defaultFirebaseConfig;
+
+        // Custom Sound Synthesizer using Web Audio API matching Earth colors style
+        class CyberSound {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            toggle() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+            playTap() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(380, this.ctx.currentTime); 
+                osc.frequency.exponentialRampToValueAtTime(760, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+            playWin() {
+                if (!this.enabled) return;
+                this.init();
+                const playNote = (freq, start, duration) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, start);
+                    gain.gain.setValueAtTime(0.12, start);
+                    gain.gain.exponentialRampToValueAtTime(0.01, start + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(start);
+                    osc.stop(start + duration);
+                };
+                const now = this.ctx.currentTime;
+                playNote(523.25, now, 0.15); // C5
+                playNote(659.25, now + 0.12, 0.15); // E5
+                playNote(783.99, now + 0.24, 0.15); // G5
+                playNote(1046.50, now + 0.36, 0.4); // C6
+            }
+            playDraw() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.35);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.35);
+            }
+        }
+        const sound = new CyberSound();
+
+        // Canvas Confetti System with customized earthy colors matching image_391a19.png
+        class ConfettiSystem {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.particles = [];
+                this.active = false;
+                window.addEventListener('resize', () => this.resize());
+                this.resize();
+            }
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            spawn() {
+                this.particles = [];
+                // Palette selections from image
+                const palette = ['#CD8D54', '#C2B896', '#FAEAD4', '#C4BEB3', '#5B6A70'];
+                for (let i = 0; i < 150; i++) {
+                    this.particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height - this.canvas.height,
+                        r: Math.random() * 6 + 4,
+                        d: Math.random() * this.canvas.height,
+                        color: palette[Math.floor(Math.random() * palette.length)],
+                        tilt: Math.random() * 10 - 5,
+                        tiltAngleIncremental: Math.random() * 0.07 + 0.02,
+                        tiltAngle: 0
+                    });
+                }
+                if (!this.active) {
+                    this.active = true;
+                    this.animate();
+                }
+            }
+            stop() {
+                this.active = false;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            animate() {
+                if (!this.active) return;
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                let remaining = false;
+                for (let p of this.particles) {
+                    p.tiltAngle += p.tiltAngleIncremental;
+                    p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
+                    p.tilt = Math.sin(p.tiltAngle) * 15;
+
+                    if (p.y <= this.canvas.height) {
+                        remaining = true;
+                    }
+
+                    this.ctx.beginPath();
+                    this.ctx.lineWidth = p.r;
+                    this.ctx.strokeStyle = p.color;
+                    this.ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                    this.ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                    this.ctx.stroke();
+                }
+                if (remaining && this.active) {
+                    requestAnimationFrame(() => this.animate());
+                } else {
+                    this.active = false;
+                }
+            }
+        }
+        const confetti = new ConfettiSystem('confetti-canvas');
+
+        // Elements mappings
+        const setupScreen = document.getElementById('setup-screen');
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+        
+        const tabLocalBtn = document.getElementById('tab-local-btn');
+        const tabOnlineBtn = document.getElementById('tab-online-btn');
+        const localSetupFields = document.getElementById('local-setup-fields');
+        const onlineSetupFields = document.getElementById('online-setup-fields');
+
+        const inputP1Local = document.getElementById('input-p1-local');
+        const inputP2Local = document.getElementById('input-p2-local');
+        const startLocalBtn = document.getElementById('start-local-btn');
+
+        const inputOnlineNick = document.getElementById('input-online-nick');
+        const createRoomBtn = document.getElementById('create-room-btn');
+        const inputRoomCode = document.getElementById('input-room-code');
+        const joinRoomBtn = document.getElementById('join-room-btn');
+
+        const lobbyCodeDisplay = document.getElementById('lobby-code-display');
+        const copyLobbyCodeBtn = document.getElementById('copy-lobby-code-btn');
+        const lobbyPlayerX = document.getElementById('lobby-player-x');
+        const lobbyPlayerO = document.getElementById('lobby-player-o');
+        const lobbyStatusX = document.getElementById('lobby-status-x');
+        const lobbyStatusO = document.getElementById('lobby-status-o');
+        const cancelLobbyBtn = document.getElementById('cancel-lobby-btn');
+
+        const boardGrid = document.getElementById('board-grid');
+        const leaveGameBtn = document.getElementById('leave-game-btn');
+        const resetGameBtn = document.getElementById('reset-game-btn');
+        
+        const hudPlayerXCard = document.getElementById('hud-player-x-card');
+        const hudPlayerOCard = document.getElementById('hud-player-o-card');
+        const hudPlayerXName = document.getElementById('hud-player-x-name');
+        const hudPlayerOName = document.getElementById('hud-player-o-name');
+        const hudPlayerXScore = document.getElementById('hud-player-x-score');
+        const hudPlayerOScore = document.getElementById('hud-player-o-score');
+        const hudTurnBadge = document.getElementById('hud-turn-badge');
+        const gameModeTag = document.getElementById('game-mode-tag');
+
+        const customAlert = document.getElementById('custom-alert');
+        const alertTitle = document.getElementById('alert-title');
+        const alertMessage = document.getElementById('alert-message');
+        const alertConfirmBtn = document.getElementById('alert-confirm-btn');
+        const alertIconContainer = document.getElementById('alert-icon-container');
+
+        const winOverlay = document.getElementById('win-overlay');
+        const winDisplayTitle = document.getElementById('win-display-title');
+        const winDisplaySubtitle = document.getElementById('win-display-subtitle');
+        const winOverlayRematchBtn = document.getElementById('win-overlay-rematch-btn');
+        const winOverlayDismissBtn = document.getElementById('win-overlay-dismiss-btn');
+
+        const toggleSoundBtn = document.getElementById('toggle-sound-btn');
+        const soundIcon = document.getElementById('sound-icon');
+        const connectionStatus = document.getElementById('connection-status');
+
+        let state = {
+            mode: 'local', // 'local' or 'online'
+            board: Array(9).fill(''),
+            turn: 'X', // 'X' or 'O'
+            localPlayers: { X: 'Jugador 1', O: 'Jugador 2' },
+            scores: { X: 0, O: 0 },
+            gameStatus: 'setup', // 'setup', 'playing', 'won', 'draw'
+            roomId: null,
+            myRole: null, // 'X' or 'O' (for online mode)
+            onlineState: null // snapshot reference
+        };
+
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        async function initializeFirebase() {
+            try {
+                if (rawFirebaseConfig) {
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    
+                    const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    if (token) {
+                        await signInWithCustomToken(auth, token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    onAuthStateChanged(auth, (usr) => {
+                        user = usr;
+                        if (user) {
+                            connectionStatus.innerHTML = `<span class="w-2 h-2 rounded-full bg-driedGrass animate-pulse"></span> Sincronizado`;
+                            connectionStatus.classList.remove('hidden');
+                        }
+                    });
+                } else {
+                    console.warn("Using offline standalone mode because no configuration was injected.");
+                }
+            } catch (err) {
+                console.error("Firebase setup failed, using offline fallback.", err);
+                showAlert("error", "Error de Red", "No se pudo conectar al servidor. El modo Online no estará disponible, pero puedes jugar Local.");
+                tabOnlineBtn.classList.add('opacity-40', 'cursor-not-allowed');
+                tabOnlineBtn.disabled = true;
+            }
+        }
+
+        function showAlert(type, title, message) {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            
+            if (type === 'error') {
+                alertIconContainer.className = "w-14 h-14 rounded-full bg-councilBluffs/10 text-councilBluffs flex items-center justify-center text-2xl";
+                alertIconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else if (type === 'success') {
+                alertIconContainer.className = "w-14 h-14 rounded-full bg-driedGrass/15 text-driedGrass flex items-center justify-center text-2xl";
+                alertIconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                alertIconContainer.className = "w-14 h-14 rounded-full bg-moodyBeige/20 text-summerSun flex items-center justify-center text-2xl";
+                alertIconContainer.innerHTML = '<i class="fa-solid fa-bell"></i>';
+            }
+
+            customAlert.classList.remove('hidden');
+            setTimeout(() => {
+                customAlert.classList.remove('opacity-0');
+                customAlert.firstElementChild.classList.remove('scale-90');
+            }, 50);
+        }
+
+        function hideAlert() {
+            customAlert.classList.add('opacity-0');
+            customAlert.firstElementChild.classList.add('scale-90');
+            setTimeout(() => {
+                customAlert.classList.add('hidden');
+            }, 300);
+        }
+
+        function showWinOverlay(title, subtitle) {
+            winDisplayTitle.textContent = title;
+            winDisplaySubtitle.textContent = subtitle;
+            winOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                winOverlay.classList.remove('opacity-0');
+                winOverlay.firstElementChild.classList.remove('scale-90');
+            }, 50);
+        }
+
+        function hideWinOverlay() {
+            winOverlay.classList.add('opacity-0');
+            winOverlay.firstElementChild.classList.add('scale-90');
+            setTimeout(() => {
+                winOverlay.classList.add('hidden');
+            }, 300);
+        }
+
+        toggleSoundBtn.addEventListener('click', () => {
+            const isEnabled = sound.toggle();
+            if (isEnabled) {
+                soundIcon.className = "fa-solid fa-volume-high";
+                toggleSoundBtn.classList.remove('text-pewterMoon');
+                toggleSoundBtn.classList.add('text-summerSun');
+            } else {
+                soundIcon.className = "fa-solid fa-volume-xmark";
+                toggleSoundBtn.classList.add('text-pewterMoon');
+                toggleSoundBtn.classList.remove('text-summerSun');
+            }
+        });
+
+        tabLocalBtn.addEventListener('click', () => {
+            state.mode = 'local';
+            tabLocalBtn.className = "py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-councilBluffs to-pewterMoon text-summerSun shadow-md";
+            tabOnlineBtn.className = "py-2.5 px-4 rounded-lg font-semibold text-sm text-moodyBeige hover:text-summerSun transition-all duration-200";
+            localSetupFields.classList.remove('hidden');
+            onlineSetupFields.classList.add('hidden');
+        });
+
+        tabOnlineBtn.addEventListener('click', () => {
+            if (!db) {
+                showAlert("error", "Sin conexión", "El servicio online no está disponible o no se configuró la base de datos.");
+                return;
+            }
+            state.mode = 'online';
+            tabOnlineBtn.className = "py-2.5 px-4 rounded-lg font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-councilBluffs to-pewterMoon text-summerSun shadow-md";
+            tabLocalBtn.className = "py-2.5 px-4 rounded-lg font-semibold text-sm text-moodyBeige hover:text-summerSun transition-all duration-200";
+            onlineSetupFields.classList.remove('hidden');
+            localSetupFields.classList.add('hidden');
+        });
+
+        alertConfirmBtn.addEventListener('click', hideAlert);
+
+        function renderBoard() {
+            boardGrid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cellVal = state.board[i];
+                const cell = document.createElement('button');
+                cell.className = "relative rounded-2xl bg-pewterMoonDeep/60 border border-pewterMoon/30 aspect-square flex items-center justify-center text-4xl font-extrabold cell-hover transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-moodyBeige/50";
+                cell.dataset.index = i;
+                
+                if (cellVal === 'X') {
+                    cell.innerHTML = `
+                        <div class="animate-ping absolute inline-flex h-1/2 w-1/2 rounded-full bg-councilBluffs opacity-20"></div>
+                        <i class="fa-solid fa-xmark text-councilBluffs text-glow-x transform scale-100 transition-all duration-300"></i>
+                    `;
+                    cell.classList.add('bg-pewterMoonDark/20', 'border-councilBluffs/30');
+                } else if (cellVal === 'O') {
+                    cell.innerHTML = `
+                        <div class="animate-ping absolute inline-flex h-1/2 w-1/2 rounded-full bg-driedGrass opacity-20"></div>
+                        <i class="fa-regular fa-circle text-driedGrass text-glow-o transform scale-100 transition-all duration-300 text-3xl"></i>
+                    `;
+                    cell.classList.add('bg-pewterMoonDark/20', 'border-driedGrass/30');
+                }
+
+                cell.addEventListener('click', () => handleCellClick(i));
+                boardGrid.appendChild(cell);
+            }
+        }
+
+        function updateTurnHUD() {
+            const nameX = state.mode === 'local' ? state.localPlayers.X : (state.onlineState?.playerX?.name || 'Esperando...');
+            const nameO = state.mode === 'local' ? state.localPlayers.O : (state.onlineState?.playerO?.name || 'Esperando...');
+
+            hudPlayerXName.textContent = nameX;
+            hudPlayerOName.textContent = nameO;
+
+            hudPlayerXScore.textContent = state.scores.X;
+            hudPlayerOScore.textContent = state.scores.O;
+
+            if (state.turn === 'X') {
+                hudPlayerXCard.className = "flex flex-col items-center p-2 rounded-xl transition-all duration-300 bg-pewterMoonDeep/50 border border-councilBluffs/50 neon-shadow-x";
+                hudPlayerOCard.className = "flex flex-col items-center p-2 rounded-xl transition-all duration-300 border border-transparent opacity-60";
+                hudTurnBadge.className = "text-xs uppercase font-extrabold tracking-widest px-3 py-1.5 rounded-full bg-councilBluffs/20 text-summerSun border border-councilBluffs/30 animate-pulse text-center";
+                hudTurnBadge.textContent = `Turno de ${nameX}`;
+            } else {
+                hudPlayerOCard.className = "flex flex-col items-center p-2 rounded-xl transition-all duration-300 bg-pewterMoonDeep/50 border border-driedGrass/50 neon-shadow-o";
+                hudPlayerXCard.className = "flex flex-col items-center p-2 rounded-xl transition-all duration-300 border border-transparent opacity-60";
+                hudTurnBadge.className = "text-xs uppercase font-extrabold tracking-widest px-3 py-1.5 rounded-full bg-driedGrass/20 text-summerSun border border-driedGrass/30 animate-pulse text-center";
+                hudTurnBadge.textContent = `Turno de ${nameO}`;
+            }
+
+            gameModeTag.textContent = state.mode === 'local' ? 'Modo Local' : `SALA: ${state.roomId}`;
+        }
+
+        function checkWinner(board) {
+            for (let combo of winningCombinations) {
+                const [a, b, c] = combo;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return { winner: board[a], line: combo };
+                }
+            }
+            if (board.every(cell => cell !== '')) {
+                return { winner: 'TIE', line: null };
+            }
+            return null;
+        }
+
+        startLocalBtn.addEventListener('click', () => {
+            const p1 = inputP1Local.value.trim() || 'Jugador 1';
+            const p2 = inputP2Local.value.trim() || 'Jugador 2';
+
+            if (p1 === p2) {
+                showAlert("error", "Nombres Iguales", "Por favor, ingresa nombres diferentes para poder identificar a cada jugador.");
+                return;
+            }
+
+            state.mode = 'local';
+            state.localPlayers.X = p1;
+            state.localPlayers.O = p2;
+            state.scores.X = 0;
+            state.scores.O = 0;
+            
+            initiateNewRound();
+            
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+        });
+
+        function initiateNewRound() {
+            state.board = Array(9).fill('');
+            state.turn = Math.random() < 0.5 ? 'X' : 'O';
+            state.gameStatus = 'playing';
+            
+            confetti.stop();
+            hideWinOverlay();
+            renderBoard();
+            updateTurnHUD();
+        }
+
+        async function handleCellClick(index) {
+            if (state.gameStatus !== 'playing') return;
+            if (state.board[index] !== '') return;
+
+            if (state.mode === 'local') {
+                state.board[index] = state.turn;
+                sound.playTap();
+                
+                const gameResult = checkWinner(state.board);
+                if (gameResult) {
+                    handleMatchFinished(gameResult);
+                } else {
+                    state.turn = state.turn === 'X' ? 'O' : 'X';
+                    renderBoard();
+                    updateTurnHUD();
+                }
+            } else if (state.mode === 'online') {
+                if (!user) {
+                    showAlert("error", "Error de Sesión", "No estás autenticado para realizar movimientos.");
+                    return;
+                }
+                
+                if (state.turn !== state.myRole) {
+                    showAlert("info", "No es tu turno", "Espera a que tu oponente realice su movimiento.");
+                    return;
+                }
+
+                const updatedBoard = [...state.board];
+                updatedBoard[index] = state.myRole;
+                
+                const result = checkWinner(updatedBoard);
+                let nextTurn = state.myRole === 'X' ? 'O' : 'X';
+                let nextStatus = 'playing';
+                let winningLine = null;
+                let finalWinner = null;
+
+                if (result) {
+                    if (result.winner === 'TIE') {
+                        nextStatus = 'draw';
+                    } else {
+                        nextStatus = 'won';
+                        finalWinner = result.winner;
+                        winningLine = result.line;
+                    }
+                }
+
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', state.roomId);
+                try {
+                    sound.playTap();
+                    const updates = {
+                        board: updatedBoard,
+                        turn: nextTurn,
+                        status: nextStatus,
+                    };
+                    if (finalWinner) updates.winner = finalWinner;
+                    if (winningLine) updates.winningLine = winningLine;
+
+                    await updateDoc(roomRef, updates);
+                } catch (e) {
+                    console.error("Failed to make move", e);
+                }
+            }
+        }
+
+        function handleMatchFinished(result) {
+            if (result.winner === 'TIE') {
+                state.gameStatus = 'draw';
+                sound.playDraw();
+                showWinOverlay("¡Empate!", "Nadie ha conseguido alinear su marca esta vez.");
+            } else {
+                state.gameStatus = 'won';
+                sound.playWin();
+                confetti.spawn();
+                
+                result.line.forEach(idx => {
+                    const cellBtn = boardGrid.querySelector(`[data-index="${idx}"]`);
+                    if (cellBtn) {
+                        cellBtn.classList.add('bg-driedGrass/20', 'border-summerSun', 'scale-105');
+                    }
+                });
+
+                state.scores[result.winner]++;
+                
+                const winnerName = state.mode === 'local' ? state.localPlayers[result.winner] : (result.winner === 'X' ? state.onlineState.playerX.name : state.onlineState.playerO.name);
+                showWinOverlay(`¡Victoria de ${winnerName}!`, `Ha completado una línea con su símbolo (${result.winner}).`);
+            }
+            renderBoard();
+            updateTurnHUD();
+        }
+
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function listenToRoom(roomId) {
+            if (roomUnsubscribe) roomUnsubscribe();
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            
+            roomUnsubscribe = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    showAlert("error", "Error de Sala", "Esta sala ya no está disponible.");
+                    leaveRoomAndClean();
+                    return;
+                }
+
+                const data = snapshot.data();
+                state.onlineState = data;
+                state.board = data.board;
+                state.turn = data.turn;
+                
+                if (data.status === 'waiting') {
+                    lobbyScreen.classList.remove('hidden');
+                    setupScreen.classList.add('hidden');
+                    gameScreen.classList.add('hidden');
+
+                    lobbyCodeDisplay.textContent = roomId;
+                    lobbyPlayerX.textContent = data.playerX ? data.playerX.name : 'Esperando...';
+                    
+                    if (data.playerO) {
+                        lobbyPlayerO.textContent = data.playerO.name;
+                        lobbyPlayerO.classList.remove('animate-pulse', 'text-moodyBeige');
+                        lobbyPlayerO.classList.add('text-summerSun');
+                        lobbyStatusO.className = "text-xs px-2.5 py-1 rounded-full bg-driedGrass/20 text-driedGrass border border-driedGrass/30";
+                        lobbyStatusO.innerHTML = '<i class="fa-solid fa-check-double"></i> Conectado';
+                        
+                        if (state.myRole) {
+                            startGameOnlineView();
+                        }
+                    } else {
+                        lobbyPlayerO.textContent = 'Esperando conexión...';
+                        lobbyPlayerO.classList.add('animate-pulse', 'text-moodyBeige');
+                        lobbyStatusO.className = "text-xs px-2.5 py-1 rounded-full bg-councilBluffs/20 text-councilBluffs border border-councilBluffs/30 flex items-center gap-1";
+                        lobbyStatusO.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-[10px]"></i> Pendiente';
+                    }
+                } else if (data.status === 'playing') {
+                    lobbyScreen.classList.add('hidden');
+                    setupScreen.classList.add('hidden');
+                    gameScreen.classList.remove('hidden');
+                    
+                    state.gameStatus = 'playing';
+                    state.scores = data.scores || { X: 0, O: 0 };
+                    hideWinOverlay();
+                    renderBoard();
+                    updateTurnHUD();
+                } else if (data.status === 'won' || data.status === 'draw') {
+                    state.scores = data.scores || { X: 0, O: 0 };
+                    const res = {
+                        winner: data.winner || 'TIE',
+                        line: data.winningLine
+                    };
+                    handleMatchFinished(res);
+                }
+            }, (error) => {
+                console.error("OnSnapshot error:", error);
+                showAlert("error", "Error de Sincronización", "Conexión interrumpida con la sala.");
+            });
+        }
+
+        async function startGameOnlineView() {
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', state.roomId);
+            await updateDoc(roomRef, { status: 'playing' });
+        }
+
+        createRoomBtn.addEventListener('click', async () => {
+            const nickname = inputOnlineNick.value.trim() || 'Jugador 1';
+            if (!user) {
+                showAlert("error", "Sin Conexión", "No tienes conexión estable o sesión autorizada.");
+                return;
+            }
+
+            const code = generateRoomCode();
+            state.roomId = code;
+            state.myRole = 'X';
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            const roomPayload = {
+                roomId: code,
+                board: Array(9).fill(''),
+                turn: 'X',
+                status: 'waiting',
+                playerX: { uid: user.uid, name: nickname },
+                playerO: null,
+                scores: { X: 0, O: 0 },
+                winner: null,
+                winningLine: null
+            };
+
+            try {
+                await setDoc(roomRef, roomPayload);
+                listenToRoom(code);
+            } catch (err) {
+                console.error("Room creation error", err);
+                showAlert("error", "Error al crear sala", "Hubo un problema de conexión al publicar la sala de juego.");
+            }
+        });
+
+        joinRoomBtn.addEventListener('click', async () => {
+            const code = inputRoomCode.value.trim().toUpperCase();
+            const nickname = inputOnlineNick.value.trim() || 'Jugador 2';
+
+            if (!code) {
+                showAlert("error", "Falta Código", "Por favor escribe un código de sala.");
+                return;
+            }
+            if (!user) {
+                showAlert("error", "Sin Conexión", "No pudimos verificar tu sesión de juego.");
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', code);
+            try {
+                const docSnap = await getDoc(roomRef);
+                if (!docSnap.exists()) {
+                    showAlert("error", "Sala No Encontrada", "Revisa que el código sea correcto.");
+                    return;
+                }
+
+                const data = docSnap.data();
+                if (data.playerO) {
+                    showAlert("error", "Sala Llena", "Esta sala ya cuenta con sus dos oponentes.");
+                    return;
+                }
+
+                state.roomId = code;
+                state.myRole = 'O';
+
+                await updateDoc(roomRef, {
+                    playerO: { uid: user.uid, name: nickname },
+                    status: 'playing'
+                });
+
+                listenToRoom(code);
+
+            } catch (e) {
+                console.error("Failed to join room", e);
+                showAlert("error", "Error al Unirse", "No se pudo conectar a la sala seleccionada.");
+            }
+        });
+
+        copyLobbyCodeBtn.addEventListener('click', () => {
+            const codeText = lobbyCodeDisplay.textContent;
+            const tempInput = document.createElement('input');
+            tempInput.value = codeText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            const icon = copyLobbyCodeBtn.querySelector('i');
+            icon.className = "fa-solid fa-check text-driedGrass";
+            setTimeout(() => {
+                icon.className = "fa-regular fa-copy";
+            }, 1500);
+        });
+
+        function leaveRoomAndClean() {
+            if (roomUnsubscribe) {
+                roomUnsubscribe();
+                roomUnsubscribe = null;
+            }
+            state.roomId = null;
+            state.myRole = null;
+            state.onlineState = null;
+            state.gameStatus = 'setup';
+            confetti.stop();
+            hideWinOverlay();
+
+            gameScreen.classList.add('hidden');
+            lobbyScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        }
+
+        cancelLobbyBtn.addEventListener('click', leaveRoomAndClean);
+        leaveGameBtn.addEventListener('click', leaveRoomAndClean);
+
+        async function triggerRematch() {
+            if (state.mode === 'local') {
+                initiateNewRound();
+            } else if (state.mode === 'online') {
+                if (!state.roomId) return;
+                const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', state.roomId);
+                
+                try {
+                    const currentScores = state.onlineState?.scores || { X: 0, O: 0 };
+                    
+                    await updateDoc(roomRef, {
+                        board: Array(9).fill(''),
+                        turn: Math.random() < 0.5 ? 'X' : 'O',
+                        status: 'playing',
+                        winner: null,
+                        winningLine: null,
+                        scores: currentScores
+                    });
+                    
+                    hideWinOverlay();
+                    confetti.stop();
+                } catch (e) {
+                    console.error("Failed to reset online match", e);
+                }
+            }
+        }
+
+        resetGameBtn.addEventListener('click', triggerRematch);
+        winOverlayRematchBtn.addEventListener('click', triggerRematch);
+        winOverlayDismissBtn.addEventListener('click', hideWinOverlay);
+
+        window.onload = function () {
+            initializeFirebase();
+            renderBoard();
+        };
+
+    </script>
+</body>
+</html>
